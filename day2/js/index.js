@@ -1,4 +1,4 @@
-import { passwords } from "./passwords.mjs";
+import { passwords } from "./passwords";
 
 const countValidPasswords = (passwords) => (policy) =>
   passwords.filter((p) => p && policy(p)).length;

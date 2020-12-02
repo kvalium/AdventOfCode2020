@@ -1,4 +1,4 @@
-import { numbers } from "./numbers.mjs";
+import { numbers } from "./numbers";
 
 const oneTermTo2020 = () => {
   for (const n of numbers) {
