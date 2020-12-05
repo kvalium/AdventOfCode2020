@@ -13,24 +13,28 @@ type passportField struct {
 	key, value string
 }
 
+type passport = []passportField
+
 var mandatoryFields = []string{"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"}
 
 func main() {
 	rawPassports := extractRawPassports("input")
-	completePassports := countValidPassports(rawPassports)
-	fmt.Println("First exercise:", completePassports)
+	completePassports := getPassportsWithAllFields(rawPassports)
+	completePassportsWithValidation := getPassportsWithValidation(completePassports)
+	fmt.Println("First exercise:", len(completePassports))
+	fmt.Println("Second exercise:", len(completePassportsWithValidation))
 }
 
-func extractRawPassports(inputFilePath string) (rawPassports [][]passportField) {
+func extractRawPassports(inputFilePath string) (rawPassports []passport) {
 	f, err := os.Open(inputFilePath)
 	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
 	rd := bufio.NewReader(f)
-	re := regexp.MustCompile(`(?m)([a-z]{3}):([a-zA-Z0-9#]+)`)
+	passportSplitRegex := regexp.MustCompile(`(?m)([a-z]{3}):([a-zA-Z0-9#]+)`)
 
-	var rawPassport []passportField
+	var rawPassport passport
 	for {
 		line, err := rd.ReadString('\n')
 
@@ -48,7 +52,7 @@ func extractRawPassports(inputFilePath string) (rawPassports [][]passportField) 
 			rawPassport = nil
 			continue
 		}
-		pFields := re.FindAllStringSubmatch(line, -1)
+		pFields := passportSplitRegex.FindAllStringSubmatch(line, -1)
 		for _, pField := range pFields {
 			pKey := pField[1]
 			pValue := pField[2]
@@ -58,48 +62,20 @@ func extractRawPassports(inputFilePath string) (rawPassports [][]passportField) 
 	return
 }
 
-func countValidPassports(rawPassports [][]passportField) (count int) {
+func getPassportsWithAllFields(rawPassports []passport) (validPassports []passport) {
 	for _, rawPassport := range rawPassports {
-		if len(rawPassport) < len(mandatoryFields) {
-			continue
-		}
-		if containsMandatoryFields(rawPassport) {
-			count++
+		if ContainsMandatoryFields(rawPassport) {
+			validPassports = append(validPassports, rawPassport)
 		}
 	}
 	return
 }
 
-func containsMandatoryFields(x []passportField) bool {
-	var keys []string
-	for _, pField := range x {
-		if pField.key == "cid" {
-			continue
-		}
-		keys = append(keys, pField.key)
-	}
-	return sameStringSlice(keys, mandatoryFields)
-}
-
-func sameStringSlice(x, y []string) bool {
-	if len(x) != len(y) {
-		return false
-	}
-	diff := make(map[string]int, len(x))
-	for _, _x := range x {
-		diff[_x]++
-	}
-	for _, _y := range y {
-		if _, ok := diff[_y]; !ok {
-			return false
-		}
-		diff[_y]--
-		if diff[_y] == 0 {
-			delete(diff, _y)
+func getPassportsWithValidation(rawPassports []passport) (validPassports []passport) {
+	for _, rawPassport := range rawPassports {
+		if ValidatePassport(rawPassport) {
+			validPassports = append(validPassports, rawPassport)
 		}
 	}
-	if len(diff) == 0 {
-		return true
-	}
-	return false
+	return
 }
