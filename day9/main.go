@@ -6,7 +6,7 @@ func main() {
 	unmat := getFirstUnmatching()
 	fmt.Println("First exercise:", unmat)
 	t := getXMasCodeBreak(unmat)
-	fmt.Println(t)
+	fmt.Println("Second exercise", t)
 }
 
 func getXMasCodeBreak(t int) int {
