@@ -24,12 +24,16 @@ type bag struct {
 var bags = make(map[string]*bag)
 var parentBagColors []string
 
+// var bagCapacity = 1
+
 var bagSplitRuleRegex = regexp.MustCompile(`([0-9])\s([a-z ]+)\sbag`)
 
 func main() {
 	getBags("./rules")
 	getParentBagColors(bags["shiny gold"])
 	fmt.Println("First exercise:", len(parentBagColors))
+	size := getBagSize(bags["shiny gold"])
+	fmt.Println("Second exercise:", size-1)
 }
 
 func getParentBagColors(bag *bag) {
@@ -43,6 +47,16 @@ func getParentBagColors(bag *bag) {
 		getParentBagColors(bags[parent.color])
 	}
 	return
+}
+
+func getBagSize(bag *bag) int {
+	cs := 1
+	if len(bag.children) > 0 {
+		for _, child := range bag.children {
+			cs += child.count * getBagSize(bags[child.color])
+		}
+	}
+	return cs
 }
 
 func getBags(inputFilePath string) {
