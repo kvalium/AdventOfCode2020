@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -31,10 +32,22 @@ var bagSplitRuleRegex = regexp.MustCompile(`([0-9])\s([a-z ]+)\sbag`)
 
 func main() {
 	start := time.Now()
+
+	bagColor := flag.String("color", "shiny gold", "bag color")
+	flag.Parse()
+
 	getBags("./rules")
-	getParentBagColors(bags["shiny gold"])
+
+	if bags[*bagColor] == nil {
+		fmt.Printf("Bag color \"%s\" not found\n", *bagColor)
+		return
+	}
+
+	fmt.Printf("Processing bag \"%s\"\n", *bagColor)
+
+	getParentBagColors(bags[*bagColor])
 	fmt.Println("First exercise:", len(parentBagColors))
-	size := getBagSize(bags["shiny gold"])
+	size := getBagSize(bags[*bagColor])
 	fmt.Println("Second exercise:", size-1)
 	elapsed := time.Since(start)
 	fmt.Println("exec. time:", elapsed)
