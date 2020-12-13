@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 )
 
 func main() {
+	start := time.Now()
 	diffs, sequences := getDiffBetweenAdapters()
 	fmt.Println("First exercice:", diffs[1]*diffs[3])
 	a := math.Pow(7, sequences[4])
 	b := math.Pow(4, sequences[3])
 	c := math.Pow(2, sequences[2])
 	fmt.Println("Second exercice:", int(a*b*c))
+	elapsed := time.Since(start)
+	fmt.Println("exec. time:", elapsed)
 }
 
 func getDiffBetweenAdapters() (map[int]int, map[int]float64) {

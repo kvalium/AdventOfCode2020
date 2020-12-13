@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type bagContent struct {
@@ -29,11 +30,14 @@ var parentBagColors []string
 var bagSplitRuleRegex = regexp.MustCompile(`([0-9])\s([a-z ]+)\sbag`)
 
 func main() {
+	start := time.Now()
 	getBags("./rules")
 	getParentBagColors(bags["shiny gold"])
 	fmt.Println("First exercise:", len(parentBagColors))
 	size := getBagSize(bags["shiny gold"])
 	fmt.Println("Second exercise:", size-1)
+	elapsed := time.Since(start)
+	fmt.Println("exec. time:", elapsed)
 }
 
 func getParentBagColors(bag *bag) {

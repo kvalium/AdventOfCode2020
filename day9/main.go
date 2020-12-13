@@ -1,12 +1,18 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
+	start := time.Now()
 	unmat := getFirstUnmatching()
 	fmt.Println("First exercise:", unmat)
 	t := getXMasCodeBreak(unmat)
 	fmt.Println("Second exercise:", t)
+	elapsed := time.Since(start)
+	fmt.Println("exec. time:", elapsed)
 }
 
 func getXMasCodeBreak(t int) int {

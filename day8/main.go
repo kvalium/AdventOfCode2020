@@ -8,6 +8,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type instruction struct {
@@ -17,11 +18,14 @@ type instruction struct {
 }
 
 func main() {
+	start := time.Now()
 	instructions := getInstructions("./boot")
 	a, infL := run(instructions)
 	fmt.Println("First exercise:", a, "(inf. loop starts at line #", infL, ")")
 	b := changeIns(instructions)
 	fmt.Println("Second exercise:", b)
+	elapsed := time.Since(start)
+	fmt.Println("exec. time:", elapsed)
 }
 
 func changeIns(instructions []instruction) int {
