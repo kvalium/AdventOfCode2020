@@ -21,9 +21,16 @@ type seat struct {
 
 func main() {
 	start := time.Now()
-	setSeatMap("./seats")
+	setSeatMap("./example")
+	origSeatMap := make([][]rune, len(seatMap))
+	for i := range seatMap {
+		origSeatMap[i] = make([]rune, len(seatMap[i]))
+		copy(origSeatMap[i], seatMap[i])
+	}
 	placePassengers()
 	fmt.Println("First exercice:", countOccupiedSeats())
+	r := checkForOccupiedSeat(&seat{x: 0, y: 0}, seat{x: 0, y: 0})
+	fmt.Println(r)
 	elapsed := time.Since(start)
 	fmt.Println("exec. time:", elapsed)
 }
@@ -125,6 +132,20 @@ func countAdjacentOccupiedSeat(s seat) (ct int) {
 	return
 }
 
+func checkForOccupiedSeat(s *seat, dir seat) bool {
+	checkSeat := seat{x: s.x + dir.x, y: s.y + dir.y}
+	fmt.Printf("check seat %+v\n", checkSeat)
+	fmt.Println("VALID", isValid(checkSeat), "ISFLOOR", isFloor(checkSeat), "ISOCCUPIED", isOccupied(checkSeat))
+
+	if !isValid(checkSeat) {
+		return false
+	}
+	if isFloor(checkSeat) {
+		return checkForOccupiedSeat(&checkSeat, dir)
+	}
+	return isOccupied(checkSeat)
+}
+
 func newSeatState(s seat) (newState rune, hasSwitched bool) {
 	nbAdjacentOccupiedSeats := countAdjacentOccupiedSeat(s)
 	currentSeatState := seatMap[s.y][s.x]
@@ -137,17 +158,17 @@ func newSeatState(s seat) (newState rune, hasSwitched bool) {
 	return currentSeatState, false
 }
 
-// func isFree(s seat) bool {
-// 	return seatMap[s.x][s.y] == freeSeat
-// }
-
 func isOccupied(s seat) bool {
-	if s.x < 0 || s.y < 0 || s.y >= nbRows || s.x >= nbCols {
+	if !isValid(s) {
 		return false
 	}
 	return seatMap[s.y][s.x] == occSeat
 }
 
-// func isFloor(s seat) bool {
-// 	return seatMap[s.x][s.y] == floor
-// }
+func isFloor(s seat) bool {
+	return seatMap[s.y][s.x] == floor
+}
+
+func isValid(s seat) bool {
+	return s.x >= 0 && s.y >= 0 && s.y < nbRows-1 && s.x < nbCols-1
+}
