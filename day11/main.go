@@ -11,9 +11,21 @@ import (
 
 var seatMap [][]rune
 var nbRows, nbCols int
+
 var occSeat = '#'
 var freeSeat = 'L'
 var floor = '.'
+
+var positions = []seat{
+	{x: 0, y: -1},  // TOP
+	{x: 1, y: -1},  // TOP-RIGHT
+	{x: 1, y: 0},   // RIGHT
+	{x: 1, y: 1},   // BOTTOM-RIGHT
+	{x: 0, y: 1},   // BOTTOM
+	{x: -1, y: 1},  // BOTTOM-LEFT
+	{x: -1, y: 0},  // LEFT
+	{x: -1, y: -1}, // TOP-LEFT
+}
 
 type seat struct {
 	x, y int
@@ -21,68 +33,20 @@ type seat struct {
 
 func main() {
 	start := time.Now()
-	setSeatMap("./example")
-	origSeatMap := make([][]rune, len(seatMap))
-	for i := range seatMap {
-		origSeatMap[i] = make([]rune, len(seatMap[i]))
-		copy(origSeatMap[i], seatMap[i])
-	}
-	placePassengers()
+	setSeatMap("./seats")
+	placePassengers(adjacentOnly)
 	fmt.Println("First exercice:", countOccupiedSeats())
-	r := checkForOccupiedSeat(&seat{x: 0, y: 0}, seat{x: 0, y: 0})
-	fmt.Println(r)
+
+	setSeatMap("./seats")
+	placePassengers(untilMatch)
+	fmt.Println("Second exercice:", countOccupiedSeats())
+
 	elapsed := time.Since(start)
 	fmt.Println("exec. time:", elapsed)
 }
 
-func placePassengers() {
-	changes := 1
-	rounds := 0
-	// fmt.Println("Placing passengers...")
-	for changes > 0 {
-		changes = addNewPassengersWave()
-		rounds++
-		// fmt.Printf("* round %v (%v changes)\n", rounds, changes)
-	}
-	// fmt.Println("done")
-}
-
-func countOccupiedSeats() (occupiedSeats int) {
-	for r := 0; r < nbRows; r++ {
-		for _, state := range seatMap[r] {
-			if state == occSeat {
-				occupiedSeats++
-			}
-		}
-	}
-	return
-}
-
-func addNewPassengersWave() (stateChanges int) {
-	newSeatMap := make([][]rune, len(seatMap))
-	for i := range seatMap {
-		newSeatMap[i] = make([]rune, len(seatMap[i]))
-		copy(newSeatMap[i], seatMap[i])
-	}
-
-	for r := 0; r < nbRows; r++ {
-		for c := 0; c < nbCols; c++ {
-			seat := seat{x: c, y: r}
-			if seatMap[r][c] == floor {
-				continue
-			}
-			newState, change := newSeatState(seat)
-			if change {
-				stateChanges++
-				newSeatMap[r][c] = newState
-			}
-		}
-	}
-	seatMap = newSeatMap
-	return
-}
-
 func setSeatMap(inputFilePath string) {
+	seatMap = nil
 	f, err := os.Open(inputFilePath)
 	defer f.Close()
 	if err != nil {
@@ -113,62 +77,58 @@ func setSeatMap(inputFilePath string) {
 	nbCols = len(seatMap[0])
 }
 
-func countAdjacentOccupiedSeat(s seat) (ct int) {
-	positions := []seat{
-		{x: s.x, y: s.y - 1},     // TOP
-		{x: s.x + 1, y: s.y - 1}, // TOP-RIGHT
-		{x: s.x + 1, y: s.y},     // RIGHT
-		{x: s.x + 1, y: s.y + 1}, // BOTTOM-RIGHT
-		{x: s.x, y: s.y + 1},     // BOTTOM
-		{x: s.x - 1, y: s.y + 1}, // BOTTOM-LEFT
-		{x: s.x - 1, y: s.y},     // LEFT
-		{x: s.x - 1, y: s.y - 1}, // TOP-LEFT
+func placePassengers(countFn func(seat) (int, int)) {
+	changes := 1
+	rounds := 0
+	for changes > 0 {
+		changes = addNewPassengersWave(countFn)
+		rounds++
 	}
-	for _, p := range positions {
-		if isOccupied(p) {
-			ct++
+}
+
+func addNewPassengersWave(countFn func(seat) (int, int)) (stateChanges int) {
+	newSeatMap := make([][]rune, len(seatMap))
+	for i := range seatMap {
+		newSeatMap[i] = make([]rune, len(seatMap[i]))
+		copy(newSeatMap[i], seatMap[i])
+	}
+
+	for r := 0; r < nbRows; r++ {
+		for c := 0; c < nbCols; c++ {
+			seat := seat{x: c, y: r}
+			if seatMap[r][c] == floor {
+				continue
+			}
+			newState, change := newSeatState(seat, countFn)
+			if change {
+				stateChanges++
+				newSeatMap[r][c] = newState
+			}
 		}
 	}
+	seatMap = newSeatMap
 	return
 }
 
-func checkForOccupiedSeat(s *seat, dir seat) bool {
-	checkSeat := seat{x: s.x + dir.x, y: s.y + dir.y}
-	fmt.Printf("check seat %+v\n", checkSeat)
-	fmt.Println("VALID", isValid(checkSeat), "ISFLOOR", isFloor(checkSeat), "ISOCCUPIED", isOccupied(checkSeat))
-
-	if !isValid(checkSeat) {
-		return false
-	}
-	if isFloor(checkSeat) {
-		return checkForOccupiedSeat(&checkSeat, dir)
-	}
-	return isOccupied(checkSeat)
-}
-
-func newSeatState(s seat) (newState rune, hasSwitched bool) {
-	nbAdjacentOccupiedSeats := countAdjacentOccupiedSeat(s)
+func newSeatState(s seat, countFn func(seat) (int, int)) (newState rune, hasSwitched bool) {
+	nbAdjacentOccupiedSeats, switchSize := countFn(s)
 	currentSeatState := seatMap[s.y][s.x]
 	if currentSeatState == freeSeat && nbAdjacentOccupiedSeats == 0 {
 		return occSeat, true
 	}
-	if currentSeatState == occSeat && nbAdjacentOccupiedSeats >= 4 {
+	if currentSeatState == occSeat && nbAdjacentOccupiedSeats >= switchSize {
 		return freeSeat, true
 	}
 	return currentSeatState, false
 }
 
-func isOccupied(s seat) bool {
-	if !isValid(s) {
-		return false
+func countOccupiedSeats() (occupiedSeats int) {
+	for r := 0; r < nbRows; r++ {
+		for _, state := range seatMap[r] {
+			if state == occSeat {
+				occupiedSeats++
+			}
+		}
 	}
-	return seatMap[s.y][s.x] == occSeat
-}
-
-func isFloor(s seat) bool {
-	return seatMap[s.y][s.x] == floor
-}
-
-func isValid(s seat) bool {
-	return s.x >= 0 && s.y >= 0 && s.y < nbRows-1 && s.x < nbCols-1
+	return
 }
