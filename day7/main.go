@@ -40,15 +40,15 @@ func main() {
 
 	if bags[*bagColor] == nil {
 		fmt.Printf("Bag color \"%s\" not found\n", *bagColor)
-		return
+		os.Exit(1)
 	}
 
-	fmt.Printf("Processing bag \"%s\"\n", *bagColor)
+	fmt.Printf("Bag \"%s\"\n", *bagColor)
 
 	getParentBagColors(bags[*bagColor])
-	fmt.Println("First exercise:", len(parentBagColors))
+	fmt.Printf("* can contains %v different bag colors\n", len(parentBagColors))
 	size := getBagSize(bags[*bagColor])
-	fmt.Println("Second exercise:", size-1)
+	fmt.Printf("* must contains %v bags\n\n", size-1)
 	elapsed := time.Since(start)
 	fmt.Println("exec. time:", elapsed)
 }
