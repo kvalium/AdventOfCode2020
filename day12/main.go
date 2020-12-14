@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -14,28 +15,35 @@ type direction struct {
 	value  int
 }
 
-type position struct{ x, y int }
-
-var actionEffect = map[rune]position{
-	'N': {x: 0, y: 1},
-	'E': {x: 1, y: 0},
-	'S': {x: 0, y: -1},
-	'W': {x: 1, y: 0},
+type position struct {
+	x, y int
+	dir  rune
 }
 
 func main() {
+	initActions()
 	directions := getDirections("./directions")
-	getFinalDestination(directions)
+	manhattan := manhattanTravel(directions)
+	fmt.Println(manhattan)
 }
 
-func getFinalDestination(directions []direction) {
-	currentDir := 'E'
-	currentPosition := position{x: 0, y: 0}
+func manhattanTravel(directions []direction) (manhattan int) {
+	currentPosition := position{x: 0, y: 0, dir: 'E'}
+	maxX, maxY := 0, 0
 	for _, d := range directions {
-		if d.action == 'F' {
-			currentPosition = actionEffect[currentPosition]
+		newPosition := actionEffect[d.action](currentPosition, d)
+		fmt.Printf("%v%v => %+v (pos %v)\n", string(d.action), d.value, newPosition, string(newPosition.dir))
+
+		if absInt(newPosition.x) > maxX {
+			maxX = absInt(newPosition.x)
 		}
+		if absInt(newPosition.y) > maxY {
+			maxY = absInt(newPosition.y)
+		}
+		currentPosition = newPosition
 	}
+	fmt.Println(maxX, maxY)
+	return maxX + maxY
 }
 
 func getDirections(inputFilePath string) (directions []direction) {
@@ -65,4 +73,11 @@ func getDirections(inputFilePath string) (directions []direction) {
 		line++
 	}
 	return
+}
+
+func absInt(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
