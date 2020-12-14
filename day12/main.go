@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -15,10 +14,26 @@ type direction struct {
 	value  int
 }
 
+type position struct{ x, y int }
+
+var actionEffect = map[rune]position{
+	'N': {x: 0, y: 1},
+	'E': {x: 1, y: 0},
+	'S': {x: 0, y: -1},
+	'W': {x: 1, y: 0},
+}
+
 func main() {
-	for i, d := range getDirections("./directions") {
-		if d.action == 'R' || d.action == 'L' {
-			fmt.Printf("%v => %+v\n", i, d)
+	directions := getDirections("./directions")
+	getFinalDestination(directions)
+}
+
+func getFinalDestination(directions []direction) {
+	currentDir := 'E'
+	currentPosition := position{x: 0, y: 0}
+	for _, d := range directions {
+		if d.action == 'F' {
+			currentPosition = actionEffect[currentPosition]
 		}
 	}
 }
